@@ -9,13 +9,15 @@ PATH_TO_IMAGE = './images/'
 PATH_TO_DRIVER = environ.get('PATH_TO_DRIVER')
 PATH_TO_BINARY_DRIVER = environ.get('PATH_TO_BINARY_DRIVER')
 chrome_options = Options()
-chrome_options.binary_location = PATH_TO_BINARY_DRIVER
 
 if not PATH_TO_DRIVER:
     PATH_TO_DRIVER = '/home/alex/selenium/chrome/90/chromedriver'
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--window-size=1920,1080')
     chrome_options.add_argument('--ignore-certificate-errors')
+
+if PATH_TO_BINARY_DRIVER:
+    chrome_options.binary_location = PATH_TO_BINARY_DRIVER
 
 
 def _prepare_url(url: str) -> str:
@@ -30,15 +32,15 @@ def _append_links(structure_links: Dict, links: List, level: int) -> None:
         structure_links[level] = links
 
 
-def _check_folder_image(func):
-    def create_folder(*args, **kwargs):
+def _check_image_folder(func):
+    def wrapper(*args, **kwargs):
         if not path.exists(PATH_TO_IMAGE):
             makedirs(PATH_TO_IMAGE)
         return func(*args, **kwargs)
-    return create_folder
+    return wrapper
 
 
-@_check_folder_image
+@_check_image_folder
 def create_screenshots(url: str, level: int) -> List:
     with webdriver.Chrome(PATH_TO_DRIVER, options=chrome_options) as driver:
         result = []
