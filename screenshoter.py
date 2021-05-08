@@ -1,16 +1,22 @@
-from os import path, makedirs
 from time import time
 from typing import Dict, List
 from selenium import webdriver
 from urllib.parse import urlparse
+from os import path, makedirs, environ
 from selenium.webdriver.chrome.options import Options
 
-PATH_TO_DRIVER = '/home/alex/selenium/chrome/90/chromedriver'
 PATH_TO_IMAGE = './images/'
+PATH_TO_DRIVER = environ.get(
+    'PATH_TO_DRIVER', '/home/alex/selenium/chrome/90/chromedriver'
+)
+PATH_TO_BINARY_DRIVER = environ.get('PATH_TO_BINARY_DRIVER', '')
 chrome_options = Options()
 chrome_options.add_argument('--headless')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--window-size=1920,1080')
 chrome_options.add_argument('--ignore-certificate-errors')
+chrome_options.binary_location = PATH_TO_BINARY_DRIVER
 
 
 def _prepare_url(url: str) -> str:
