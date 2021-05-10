@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from os import path, makedirs, environ
 from selenium.webdriver.chrome.options import Options
 
-AWS_ACCESS_KEY_ID = environ.get('AWS_ACCEESS_KEY_ID')
+AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET = environ.get('S3_BUCKET', 'timeweb-screenshoter-images')
 PATH_TO_DRIVER = environ.get('PATH_TO_DRIVER')
