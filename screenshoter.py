@@ -7,14 +7,14 @@ from urllib.parse import urlparse
 from os import path, makedirs, environ
 from selenium.webdriver.chrome.options import Options
 
-AWS_ACCEESS_KEY_ID = environ.get('AWS_ACCEESS_KEY_ID')
+AWS_ACCESS_KEY_ID = environ.get('AWS_ACCEESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET = environ.get('S3_BUCKET', 'timeweb-screenshoter-images')
 PATH_TO_DRIVER = environ.get('PATH_TO_DRIVER')
 PATH_TO_BINARY_DRIVER = environ.get('PATH_TO_BINARY_DRIVER')
 
 s3_session = Session(
-    aws_access_key_id=AWS_ACCEESS_KEY_ID,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 s3_client = s3_session.client('s3')
