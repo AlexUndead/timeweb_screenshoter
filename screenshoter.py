@@ -1,4 +1,5 @@
 import io
+from time import sleep
 from boto3 import Session
 from time import time
 from typing import Dict, List
@@ -56,6 +57,7 @@ def create_screenshots(url: str, level: int) -> List:
         for level in range(level):
             for url in set(structure_links[level]):
                 driver.get(url)
+                sleep(5)
                 image_name = str(int(time()))
                 with io.BytesIO(driver.get_screenshot_as_png()) as screenshot:
                     s3_client.upload_fileobj(screenshot, S3_BUCKET, f'{image_name}.png')
