@@ -1,10 +1,12 @@
+import io
 from os.path import isfile
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from typing import Optional, Dict
 from pydantic import HttpUrl, NonNegativeInt, PositiveInt
 
 from tasks import get_screenshots_ids
+from screenshoter import get_file
 
 app = FastAPI()
 
@@ -21,10 +23,11 @@ def create_screenshots(url: HttpUrl, level: Optional[NonNegativeInt] = 1):
 
 @app.get('/screenshot/{id}')
 def get_screenshot(id: PositiveInt):
-    path_file = f'./images/{id}.png'
-    if isfile(path_file):
-        return FileResponse(path_file)
-    raise HTTPException(status_code=404, detail='Picture not found')
+    try:
+        file = get_file(f'{id}.png')
+        return StreamingResponse(io.BytesIO(file), media_type='image/png')
+    except:
+        raise HTTPException(status_code=404, detail='Picture not found')
 
 
 @app.get('/check/{id}')

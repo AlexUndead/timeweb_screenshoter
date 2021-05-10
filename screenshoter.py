@@ -1,3 +1,5 @@
+import io
+from boto3 import Session
 from time import time
 from typing import Dict, List
 from selenium import webdriver
@@ -5,13 +7,22 @@ from urllib.parse import urlparse
 from os import path, makedirs, environ
 from selenium.webdriver.chrome.options import Options
 
-PATH_TO_IMAGE = './images/'
+AWS_ACCEESS_KEY_ID = environ.get('AWS_ACCEESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
+S3_BUCKET = environ.get('S3_BUCKET', 'timeweb-screenshoter-images')
 PATH_TO_DRIVER = environ.get('PATH_TO_DRIVER')
 PATH_TO_BINARY_DRIVER = environ.get('PATH_TO_BINARY_DRIVER')
+
+s3_session = Session(
+    aws_access_key_id=AWS_ACCEESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
+s3_client = s3_session.client('s3')
+s3_resource = s3_session.resource('s3')
 chrome_options = Options()
 
 if not PATH_TO_DRIVER:
-    PATH_TO_DRIVER = '/home/alex/selenium/chrome/90/chromedriver'
+    PATH_TO_DRIVER = '/var/www/html/Projects/selenium-drivers/chrome/87/chromedriver'
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--window-size=1920,1080')
     chrome_options.add_argument('--ignore-certificate-errors')
@@ -32,15 +43,10 @@ def _append_links(structure_links: Dict, links: List, level: int) -> None:
         structure_links[level] = links
 
 
-def _check_image_folder(func):
-    def wrapper(*args, **kwargs):
-        if not path.exists(PATH_TO_IMAGE):
-            makedirs(PATH_TO_IMAGE)
-        return func(*args, **kwargs)
-    return wrapper
+def get_file(name: str):
+    return s3_resource.Object(S3_BUCKET, name).get()['Body'].read()
 
 
-@_check_image_folder
 def create_screenshots(url: str, level: int) -> List:
     with webdriver.Chrome(PATH_TO_DRIVER, options=chrome_options) as driver:
         result = []
@@ -51,7 +57,8 @@ def create_screenshots(url: str, level: int) -> List:
             for url in set(structure_links[level]):
                 driver.get(url)
                 image_name = str(int(time()))
-                driver.save_screenshot(f'{PATH_TO_IMAGE}{image_name}.png')
+                with io.BytesIO(driver.get_screenshot_as_png()) as screenshot:
+                    s3_client.upload_fileobj(screenshot, S3_BUCKET, f'{image_name}.png')
                 result.append(image_name)
                 all_links = [
                     link.get_attribute('href')
