@@ -6,7 +6,7 @@ from typing import Optional, Dict
 from pydantic import HttpUrl, NonNegativeInt, PositiveInt
 
 from tasks import get_screenshots_ids
-from screenshoter import get_file
+from screenshoter import IMAGES_DIR
 
 app = FastAPI()
 
@@ -23,11 +23,7 @@ def create_screenshots(url: HttpUrl, level: Optional[NonNegativeInt] = 1):
 
 @app.get('/screenshot/{id}')
 def get_screenshot(id: PositiveInt):
-    try:
-        file = get_file(f'{id}.png')
-        return StreamingResponse(io.BytesIO(file), media_type='image/png')
-    except:
-        raise HTTPException(status_code=404, detail='Picture not found')
+    return FileResponse(IMAGES_DIR+f'{id}.png')
 
 
 @app.get('/check/{id}')

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    build: ./app
+    volumes:
+      - ./app:/app
+    command:
+      bash -c "yes | pip install -r /app/requirements.txt &&
+      uvicorn main:app --host 0.0.0.0 --reload"
+    ports:
+      - 8000:8000 
+  redis:
+    image: "redis:6.2.3"
+    ports:
+     - 6379:6379
+  celery:
+    build: ./app
+    volumes:
+      - ./app:/app
+    command:
+      bash -c "yes | pip install -r /app/requirements.txt &&
+      celery -A tasks worker -l info"
+    depends_on:
+      - redis
+  selenium:
+   image: selenium/standalone-chrome
+   ports:
+     - 4444:4444
