@@ -1,5 +1,4 @@
 import io
-from time import sleep
 from boto3 import Session
 from time import time
 from typing import Dict, List
@@ -21,12 +20,12 @@ s3_session = Session(
 s3_client = s3_session.client('s3')
 s3_resource = s3_session.resource('s3')
 chrome_options = Options()
+chrome_options.add_argument('--ignore-certificate-errors')
 
 if not PATH_TO_DRIVER:
     PATH_TO_DRIVER = '/var/www/html/Projects/selenium-drivers/chrome/87/chromedriver'
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--window-size=1920,1080')
-    chrome_options.add_argument('--ignore-certificate-errors')
 
 if PATH_TO_BINARY_DRIVER:
     chrome_options.binary_location = PATH_TO_BINARY_DRIVER
@@ -57,7 +56,6 @@ def create_screenshots(url: str, level: int) -> List:
         for level in range(level):
             for url in set(structure_links[level]):
                 driver.get(url)
-                sleep(5)
                 image_name = str(int(time()))
                 with io.BytesIO(driver.get_screenshot_as_png()) as screenshot:
                     s3_client.upload_fileobj(screenshot, S3_BUCKET, f'{image_name}.png')
