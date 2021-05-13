@@ -10,7 +10,10 @@ from selenium.webdriver.chrome.options import Options
 AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET = environ.get('S3_BUCKET', 'timeweb-screenshoter-images')
-PATH_TO_DRIVER = environ.get('PATH_TO_DRIVER')
+PATH_TO_DRIVER = environ.get(
+    'PATH_TO_DRIVER',
+    '/var/www/html/Projects/selenium-drivers/chrome/87/chromedriver'
+)
 PATH_TO_BINARY_DRIVER = environ.get('PATH_TO_BINARY_DRIVER')
 
 s3_session = Session(
@@ -21,14 +24,9 @@ s3_client = s3_session.client('s3')
 s3_resource = s3_session.resource('s3')
 chrome_options = Options()
 chrome_options.add_argument('--ignore-certificate-errors')
-
-if not PATH_TO_DRIVER:
-    PATH_TO_DRIVER = '/var/www/html/Projects/selenium-drivers/chrome/87/chromedriver'
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--window-size=1920,1080')
-
-if PATH_TO_BINARY_DRIVER:
-    chrome_options.binary_location = PATH_TO_BINARY_DRIVER
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--window-size=1920,1080')
+chrome_options.binary_location = PATH_TO_BINARY_DRIVER
 
 
 def _prepare_url(url: str) -> str:
