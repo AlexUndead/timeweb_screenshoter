@@ -25,7 +25,7 @@ s3_resource = s3_session.resource('s3')
 chrome_options = Options()
 chrome_options.add_argument('--ignore-certificate-errors')
 #chrome_options.add_argument('--headless')
-chrome_options.add_argument('--window-size=800,600')
+chrome_options.add_argument('--window-size=950,700')
 chrome_options.binary_location = PATH_TO_BINARY_DRIVER
 
 
