@@ -78,7 +78,7 @@ def create_screenshots(main_url: str, max_level: int) -> List:
     '''Создание скриншотов'''
     result = []
     site_address = _get_site_address(main_url)
-    structured_links = {0: [main_url]}
+    structured_links = {0: [site_address]}
 
     with Chrome(PATH_TO_DRIVER, options=chrome_options) as driver:
         for level in range(max_level):
