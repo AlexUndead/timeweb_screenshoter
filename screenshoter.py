@@ -33,12 +33,12 @@ def _get_site_address(url: str) -> str:
     return f'{parsed_url.scheme}://{parsed_url.netloc}'
 
 
-def _append_links(structure_links: Dict, links: List, level: int) -> None:
+def _append_links(structured_links: Dict, links: List, level: int) -> None:
     '''Добавление ссылок в структуру ссылок сайта'''
-    if structure_links.get(level):
-        structure_links[level].append(links)
+    if not structured_links.get(level):
+        structured_links[level] = links
     else:
-        structure_links[level] = links
+        structured_links[level].append(links)
 
 
 def get_file(name: str):
