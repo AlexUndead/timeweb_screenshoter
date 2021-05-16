@@ -97,7 +97,6 @@ def create_screenshots(main_url: str, max_level: int) -> List:
                             prepared_links,
                             next_level
                         )
-                    _append_links(structured_links, prepared_links, next_level)
                 except WebDriverException:
                     continue
         return result
