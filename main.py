@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import HttpUrl, NonNegativeInt, PositiveInt
-from botocore.exceptions import CliendError
+from botocore.exceptions import ClientError
 
 from tasks import get_screenshots_ids
 from screenshoter import get_file
@@ -29,7 +29,7 @@ def get_screenshot(screenshot_id: PositiveInt):
     try:
         file = get_file(f'{screenshot_id}.png')
         return StreamingResponse(io.BytesIO(file), media_type='image/png')
-    except CliendError:
+    except ClientError:
         raise HTTPException(status_code=404, detail='Picture not found')
 
 
