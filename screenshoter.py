@@ -1,19 +1,17 @@
-import io
-from boto3 import Session
+from io import BytesIO
+from os import environ
 from time import time
-from typing import Dict, List
-from selenium import webdriver
 from urllib.parse import urlparse
-from os import path, makedirs, environ
+from typing import Dict, List
+from boto3 import Session
+from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import WebDriverException
 
 AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
-S3_BUCKET = environ.get('S3_BUCKET', 'timeweb-screenshoter-images')
-PATH_TO_DRIVER = environ.get(
-    'PATH_TO_DRIVER',
-    '/var/www/html/Projects/selenium-drivers/chrome/87/chromedriver'
-)
+S3_BUCKET = environ.get('S3_BUCKET')
+PATH_TO_DRIVER = environ.get('PATH_TO_DRIVER')
 PATH_TO_BINARY_DRIVER = environ.get('PATH_TO_BINARY_DRIVER')
 
 s3_session = Session(
@@ -24,17 +22,19 @@ s3_client = s3_session.client('s3')
 s3_resource = s3_session.resource('s3')
 chrome_options = Options()
 chrome_options.add_argument('--ignore-certificate-errors')
-#chrome_options.add_argument('--headless')
+chrome_options.add_argument('--headless')
 chrome_options.add_argument('--window-size=950,700')
 chrome_options.binary_location = PATH_TO_BINARY_DRIVER
 
 
-def _prepare_url(url: str) -> str:
+def _get_site_address(url: str) -> str:
+    '''Получение адреса сайта'''
     parsed_url = urlparse(url)
     return f'{parsed_url.scheme}://{parsed_url.netloc}'
 
 
 def _append_links(structure_links: Dict, links: List, level: int) -> None:
+    '''Добавление ссылок в структуру ссылок сайта'''
     if structure_links.get(level):
         structure_links[level].append(links)
     else:
@@ -42,26 +42,62 @@ def _append_links(structure_links: Dict, links: List, level: int) -> None:
 
 
 def get_file(name: str):
+    '''Получение файла в байтах'''
     return s3_resource.Object(S3_BUCKET, name).get()['Body'].read()
 
 
-def create_screenshots(url: str, level: int) -> List:
-    with webdriver.Chrome(PATH_TO_DRIVER, options=chrome_options) as driver:
-        result = []
-        main_url = _prepare_url(url)
-        structure_links = {0: [main_url]}
+def _check_url(url: str, site_address: str) -> bool:
+    '''Проверка урла пренадлежности сайту'''
+    if url:
+        return url.startswith(site_address)
+    return False
 
-        for level in range(level):
-            for url in set(structure_links[level]):
-                driver.get(url)
-                image_name = str(int(time()))
-                with io.BytesIO(driver.get_screenshot_as_png()) as screenshot:
-                    s3_client.upload_fileobj(screenshot, S3_BUCKET, f'{image_name}.png')
-                result.append(image_name)
-                all_links = [
-                    link.get_attribute('href')
-                    for link in driver.find_elements_by_tag_name('a')
-                ]
-                links = [link for link in all_links if link.startswith(main_url)]
-                _append_links(structure_links, links, level + 1)
+
+def _get_all_links(driver: Chrome) -> List:
+    '''Получение всех ссылок со страницы'''
+    return [
+        link.get_attribute("href")
+        for link in driver.find_elements_by_tag_name("a")
+    ]
+
+
+def _create_screenshot(driver: Chrome, url: str) -> str:
+    '''Создание скриншота'''
+    screenshot_name = str(int(time()))
+    driver.get(url)
+    with BytesIO(driver.get_screenshot_as_png()) as screenshot:
+        s3_client.upload_fileobj(
+            screenshot,
+            S3_BUCKET,
+            f'{screenshot_name}.png'
+        )
+        return screenshot_name
+
+
+def create_screenshots(main_url: str, max_level: int) -> List:
+    '''Создание скриншотов'''
+    result = []
+    site_address = _get_site_address(main_url)
+    structured_links = {0: [main_url]}
+
+    with Chrome(PATH_TO_DRIVER, options=chrome_options) as driver:
+        for level in range(max_level):
+            for url in set(structured_links[level]):
+                try:
+                    next_level = level + 1
+                    screenshot_name = _create_screenshot(driver, url)
+                    result.append(screenshot_name)
+                    prepared_links = [
+                        link for link in _get_all_links(driver)
+                        if _check_url(link, site_address)
+                    ]
+                    if next_level <= max_level:
+                        _append_links(
+                            structured_links,
+                            prepared_links,
+                            next_level
+                        )
+                    _append_links(structured_links, prepared_links, next_level)
+                except WebDriverException:
+                    continue
         return result
