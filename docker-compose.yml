@@ -24,6 +24,6 @@ services:
     depends_on:
       - redis
   selenium:
-   image: selenium/standalone-chrome
+   image: selenium/standalone-firefox
    ports:
      - 4444:4444

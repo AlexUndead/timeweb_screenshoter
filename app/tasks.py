@@ -11,4 +11,5 @@ app.conf.update(task_track_started=True)
 
 @app.task
 def get_screenshots_ids(url: str, level: int):
+    '''Задача создания скриншотов'''
     return create_screenshots(url, level)
