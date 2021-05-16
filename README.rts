@@ -10,6 +10,8 @@
 Проект доступен по следующему урлу https://timeweb-screenshoter.herokuapp.com/
 Документация доступна по https://timeweb-screenshoter.herokuapp.com/docs
 
+Сервис после создания всех скриншотов возвращает список id's.
+
 
 UPD
 ---
